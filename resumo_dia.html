@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=SF+Pro:wght@300;400;600&display=swap');
+      
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'SF Pro', sans-serif;
+      }
+      
+      .slide-container {
+        width: 1280px;
+        min-height: 720px;
+        background: #000000;
+        color: #FFFFFF;
+        display: flex;
+        position: relative;
+      }
+      
+      .left-column {
+        width: 50%;
+        padding: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .right-column {
+        width: 50%;
+        padding: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      
+      .title {
+        font-family: 'Inter', sans-serif;
+        font-size: 48px;
+        font-weight: 700;
+        margin-bottom: 40px;
+        line-height: 1.2;
+      }
+      
+      .content-section {
+        margin-bottom: 30px;
+      }
+      
+      .section-title {
+        font-family: 'Inter', sans-serif;
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #CCCCCC;
+      }
+      
+      .section-content {
+        font-family: 'SF Pro', sans-serif;
+        font-size: 18px;
+        line-height: 1.5;
+        margin-bottom: 10px;
+      }
+      
+      .visual-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .abstract-image {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .snapshot-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      
+      .snapshot-date-selector {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        color: white;
+        padding: 5px 10px;
+        font-size: 14px;
+      }
+      
+      .snapshot-date-selector:focus {
+        outline: none;
+        border-color: #CCCCCC;
+      }
+      
+      .snapshot-date-selector option {
+        background: #000000;
+        color: white;
+      }
+      
+      .btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+      }
+      
+      .btn i {
+        margin-right: 5px;
+      }
+      
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      
+      .btn:active {
+        transform: translateY(1px);
+      }
+      
+      .btn-save {
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+      
+      .btn-save:hover {
+        background: rgba(255, 255, 255, 0.25);
+      }
+      
+      .btn-new {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      
+      .btn-new:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      
+      .btn-delete {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      
+      .btn-delete:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      
+      .input-field {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        color: white;
+        padding: 8px 12px;
+        width: 100%;
+        margin-bottom: 10px;
+        font-family: 'SF Pro', sans-serif;
+        font-size: 16px;
+      }
+      
+      .input-field:focus {
+        outline: none;
+        border-color: #CCCCCC;
+      }
+      
+      .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #000000;
+        padding: 10px 20px;
+        border-radius: 4px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        display: none;
+        z-index: 1000;
+        animation: fadeIn 0.3s, fadeOut 0.3s 2.7s;
+      }
+      
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      
+      @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="slide-container">
+      <div class="left-column">
+        <div class="visual-container">
+          <div class="abstract-image">
+            <svg width="100%" height="100%" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+              <!-- Gráfico abstrato representando análise de dados -->
+              <rect x="50" y="50" width="400" height="400" fill="none" stroke="#333" stroke-width="1" />
+              
+              <!-- Linhas de grade -->
+              <g stroke="#222" stroke-width="0.5">
+                <line x1="50" y1="150" x2="450" y2="150" />
+                <line x1="50" y1="250" x2="450" y2="250" />
+                <line x1="50" y1="350" x2="450" y2="350" />
+                <line x1="150" y1="50" x2="150" y2="450" />
+                <line x1="250" y1="50" x2="250" y2="450" />
+                <line x1="350" y1="50" x2="350" y2="450" />
+              </g>
+              
+              <!-- Gráfico de linha -->
+              <polyline points="50,350 150,280 250,320 350,200 450,150" fill="none" stroke="#CCCCCC" stroke-width="2" />
+              
+              <!-- Pontos de dados -->
+              <circle cx="50" cy="350" r="5" fill="#FFFFFF" />
+              <circle cx="150" cy="280" r="5" fill="#FFFFFF" />
+              <circle cx="250" cy="320" r="5" fill="#FFFFFF" />
+              <circle cx="350" cy="200" r="5" fill="#FFFFFF" />
+              <circle cx="450" cy="150" r="5" fill="#FFFFFF" />
+              
+              <!-- Barras de dados -->
+              <rect x="100" y="350" width="30" height="50" fill="#333" stroke="#444" />
+              <rect x="200" y="320" width="30" height="80" fill="#333" stroke="#444" />
+              <rect x="300" y="280" width="30" height="120" fill="#333" stroke="#444" />
+              <rect x="400" y="250" width="30" height="150" fill="#333" stroke="#444" />
+              
+              <!-- Elementos decorativos -->
+              <circle cx="250" cy="250" r="100" fill="none" stroke="#333" stroke-width="1" stroke-dasharray="5,5" />
+              <circle cx="250" cy="250" r="50" fill="none" stroke="#333" stroke-width="1" />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="right-column">
+        <h1 class="title">Resumo do Dia</h1>
+        
+        <div class="snapshot-controls">
+          <select id="snapshot-date" class="snapshot-date-selector">
+            <option value="current" selected>Data Atual</option>
+            <!-- Datas salvas serão adicionadas dinamicamente -->
+          </select>
+          <button id="btn-new-snapshot" class="btn btn-new">
+            <i class="fas fa-plus"></i> Novo
+          </button>
+          <button id="btn-save-snapshot" class="btn btn-save">
+            <i class="fas fa-save"></i> Salvar
+          </button>
+          <button id="btn-delete-snapshot" class="btn btn-delete" style="display: none;">
+            <i class="fas fa-trash"></i> Apagar
+          </button>
+        </div>
+        
+        <div class="content-section">
+          <h2 class="section-title">Fechamentos</h2>
+          <textarea id="fechamentos" class="input-field" rows="2" placeholder="Quantidade e valor dos fechamentos do dia..."></textarea>
+        </div>
+        
+        <div class="content-section">
+          <h2 class="section-title">Pendências</h2>
+          <textarea id="pendencias" class="input-field" rows="2" placeholder="Principais gargalos e pendências..."></textarea>
+        </div>
+        
+        <div class="content-section">
+          <h2 class="section-title">Oportunidades</h2>
+          <textarea id="oportunidades" class="input-field" rows="2" placeholder="Clientes e negócios em destaque..."></textarea>
+        </div>
+      </div>
+    </div>
+    
+    <div id="notification" class="notification">Dados salvos com sucesso!</div>
+    
+    <script>
+      // Formatação de data
+      function formatDate(date) {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+      }
+      
+      // Data atual
+      const today = new Date();
+      const currentDate = formatDate(today);
+      
+      // Armazenamento de snapshots
+      const snapshots = {
+        current: {
+          date: currentDate,
+          fechamentos: '',
+          pendencias: '',
+          oportunidades: ''
+        }
+      };
+      
+      // Snapshot selecionado atualmente
+      let currentSnapshotKey = 'current';
+      
+      // Função para mostrar notificação
+      function showNotification(message, isError = false) {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        
+        // Adicionar ou remover classe de erro
+        if (isError) {
+          notification.style.backgroundColor = 'rgba(255, 0, 0, 0.9)';
+        } else {
+          notification.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+        }
+        
+        notification.style.display = 'block';
+        
+        // Esconder a notificação após 3 segundos
+        setTimeout(() => {
+          notification.style.display = 'none';
+        }, 3000);
+      }
+      
+      // Função para atualizar os campos de entrada com os dados do snapshot
+      function updateInputFields() {
+        const snapshot = snapshots[currentSnapshotKey];
+        const isEditable = currentSnapshotKey === 'current';
+        
+        document.getElementById('fechamentos').value = snapshot.fechamentos;
+        document.getElementById('pendencias').value = snapshot.pendencias;
+        document.getElementById('oportunidades').value = snapshot.oportunidades;
+        
+        // Desabilitar campos se não for o snapshot atual
+        const inputs = document.querySelectorAll('.input-field');
+        inputs.forEach(input => {
+          input.disabled = !isEditable;
+          if (!isEditable) {
+            input.style.opacity = '0.7';
+          } else {
+            input.style.opacity = '1';
+          }
+        });
+        
+        // Mostrar/ocultar botão de apagar snapshot
+        document.getElementById('btn-delete-snapshot').style.display = currentSnapshotKey !== 'current' ? 'flex' : 'none';
+      }
+      
+      // Função para atualizar o seletor de snapshots
+      function updateSnapshotSelector() {
+        const selector = document.getElementById('snapshot-date');
+        const currentOption = selector.value;
+        
+        // Limpar opções existentes, exceto a atual
+        while (selector.options.length > 1) {
+          selector.remove(1);
+        }
+        
+        // Adicionar snapshots salvos
+        Object.keys(snapshots).forEach(key => {
+          if (key !== 'current') {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = snapshots[key].date;
+            selector.appendChild(option);
+          }
+        });
+        
+        // Restaurar a seleção anterior, se possível
+        if (Object.keys(snapshots).includes(currentOption)) {
+          selector.value = currentOption;
+        } else {
+          selector.value = 'current';
+          currentSnapshotKey = 'current';
+        }
+      }
+      
+      // Função para salvar o snapshot atual
+      function saveSnapshot() {
+        // Atualizar os dados do snapshot atual
+        snapshots.current.fechamentos = document.getElementById('fechamentos').value;
+        snapshots.current.pendencias = document.getElementById('pendencias').value;
+        snapshots.current.oportunidades = document.getElementById('oportunidades').value;
+        
+        // Criar uma cópia do snapshot atual com a data como chave
+        const dateKey = currentDate.replace(/\//g, '-');
+        snapshots[dateKey] = JSON.parse(JSON.stringify(snapshots.current));
+        
+        // Atualizar o seletor de snapshots
+        updateSnapshotSelector();
+        
+        // Mostrar notificação
+        showNotification('Snapshot salvo com sucesso!');
+      }
+      
+      // Função para criar um novo snapshot
+      function createNewSnapshot() {
+        // Limpar os dados do snapshot atual
+        snapshots.current = {
+          date: formatDate(new Date()),
+          fechamentos: '',
+          pendencias: '',
+          oportunidades: ''
+        };
+        
+        // Atualizar a interface
+        loadSnapshot('current');
+        
+        // Mostrar notificação
+        showNotification('Novo snapshot criado com sucesso!');
+      }
+      
+      // Função para apagar um snapshot
+      function deleteSnapshot() {
+        // Não permitir apagar o snapshot atual
+        if (currentSnapshotKey === 'current') {
+          showNotification('Não é possível apagar o snapshot atual!', true);
+          return;
+        }
+        
+        // Confirmar antes de apagar
+        if (confirm(`Tem certeza que deseja apagar o snapshot de ${snapshots[currentSnapshotKey].date}?`)) {
+          // Apagar o snapshot
+          delete snapshots[currentSnapshotKey];
+          
+          // Atualizar o seletor de snapshots
+          updateSnapshotSelector();
+          
+          // Carregar o snapshot atual
+          loadSnapshot('current');
+          
+          // Mostrar notificação
+          showNotification('Snapshot apagado com sucesso!');
+        }
+      }
+      
+      // Função para carregar um snapshot
+      function loadSnapshot(snapshotKey) {
+        if (snapshots[snapshotKey]) {
+          currentSnapshotKey = snapshotKey;
+          
+          // Atualizar os campos de entrada
+          updateInputFields();
+        }
+      }
+      
+      // Evento de mudança no seletor de snapshot
+      document.getElementById('snapshot-date').addEventListener('change', function() {
+        loadSnapshot(this.value);
+      });
+      
+      // Evento de clique no botão de salvar snapshot
+      document.getElementById('btn-save-snapshot').addEventListener('click', saveSnapshot);
+      
+      // Evento de clique no botão de novo snapshot
+      document.getElementById('btn-new-snapshot').addEventListener('click', function() {
+        if (confirm('Tem certeza que deseja criar um novo snapshot? Isso limpará todos os dados do snapshot atual.')) {
+          createNewSnapshot();
+        }
+      });
+      
+      // Evento de clique no botão de apagar snapshot
+      document.getElementById('btn-delete-snapshot').addEventListener('click', deleteSnapshot);
+      
+      // Inicializar a interface
+      updateInputFields();
+    </script>
+<script src="js/navigation.js"></script>
+  </body>
+</html>

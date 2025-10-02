@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=SF+Pro:wght@300;400;600&display=swap');
+      
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'SF Pro', sans-serif;
+      }
+      
+      .slide-container {
+        width: 1280px;
+        min-height: 720px;
+        background: #000000;
+        color: #FFFFFF;
+        display: flex;
+        position: relative;
+      }
+      
+      .left-column {
+        width: 50%;
+        padding: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .right-column {
+        width: 50%;
+        padding: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      
+      .title {
+        font-family: 'Inter', sans-serif;
+        font-size: 48px;
+        font-weight: 700;
+        margin-bottom: 40px;
+        line-height: 1.2;
+      }
+      
+      .subtitle {
+        font-family: 'Inter', sans-serif;
+        font-size: 24px;
+        font-weight: 300;
+        margin-bottom: 30px;
+        opacity: 0.8;
+      }
+      
+      .quote {
+        font-family: 'Inter', sans-serif;
+        font-size: 18px;
+        font-style: italic;
+        margin-bottom: 20px;
+        padding-left: 20px;
+        border-left: 4px solid rgba(255, 255, 255, 0.3);
+      }
+      
+      .quote-author {
+        font-family: 'SF Pro', sans-serif;
+        font-size: 14px;
+        text-align: right;
+        opacity: 0.7;
+      }
+      
+      .visual-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .abstract-image {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .snapshot-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      
+      .snapshot-date-selector {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        color: white;
+        padding: 5px 10px;
+        font-size: 14px;
+      }
+      
+      .snapshot-date-selector:focus {
+        outline: none;
+        border-color: #CCCCCC;
+      }
+      
+      .snapshot-date-selector option {
+        background: #000000;
+        color: white;
+      }
+      
+      .btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+      }
+      
+      .btn i {
+        margin-right: 5px;
+      }
+      
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      
+      .btn:active {
+        transform: translateY(1px);
+      }
+      
+      .btn-save {
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+      
+      .btn-save:hover {
+        background: rgba(255, 255, 255, 0.25);
+      }
+      
+      .btn-new {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      
+      .btn-new:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      
+      .btn-delete {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      
+      .btn-delete:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      
+      .action-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      
+      .action-item {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: flex-start;
+      }
+      
+      .action-number {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 15px;
+        flex-shrink: 0;
+      }
+      
+      .action-content {
+        flex: 1;
+      }
+      
+      .action-input {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        color: white;
+        padding: 8px 12px;
+        width: 100%;
+        font-family: 'SF Pro', sans-serif;
+        font-size: 16px;
+      }
+      
+      .action-input:focus {
+        outline: none;
+        border-color: #CCCCCC;
+      }
+      
+      .action-controls {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+      }
+      
+      .action-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+      }
+      
+      .action-btn i {
+        margin-right: 5px;
+      }
+      
+      .action-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      
+      .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #000000;
+        padding: 10px 20px;
+        border-radius: 4px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        display: none;
+        z-index: 1000;
+        animation: fadeIn 0.3s, fadeOut 0.3s 2.7s;
+      }
+      
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      
+      @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="slide-container">
+      <div class="left-column">
+        <div class="visual-container">
+          <div class="abstract-image">
+            <svg width="100%" height="100%" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+              <!-- Gráfico abstrato representando planejamento -->
+              <rect x="50" y="50" width="400" height="400" fill="none" stroke="#333" stroke-width="1" />
+              
+              <!-- Linhas de grade -->
+              <g stroke="#222" stroke-width="0.5">
+                <line x1="50" y1="150" x2="450" y2="150" />
+                <line x1="50" y1="250" x2="450" y2="250" />
+                <line x1="50" y1="350" x2="450" y2="350" />
+                <line x1="150" y1="50" x2="150" y2="450" />
+                <line x1="250" y1="50" x2="250" y2="450" />
+                <line x1="350" y1="50" x2="350" y2="450" />
+              </g>
+              
+              <!-- Elementos de planejamento -->
+              <rect x="100" y="100" width="300" height="50" fill="none" stroke="#CCCCCC" stroke-width="2" />
+              <rect x="100" y="200" width="300" height="50" fill="none" stroke="#CCCCCC" stroke-width="2" />
+              <rect x="100" y="300" width="300" height="50" fill="none" stroke="#CCCCCC" stroke-width="2" />
+              
+              <!-- Marcadores de prioridade -->
+              <circle cx="80" cy="125" r="10" fill="#FFFFFF" />
+              <circle cx="80" cy="225" r="10" fill="#FFFFFF" />
+              <circle cx="80" cy="325" r="10" fill="#FFFFFF" />
+              
+              <!-- Linhas de conexão -->
+              <line x1="100" y1="125" x2="400" y2="125" stroke="#FFFFFF" stroke-width="1" stroke-dasharray="5,5" />
+              <line x1="100" y1="225" x2="400" y2="225" stroke="#FFFFFF" stroke-width="1" stroke-dasharray="5,5" />
+              <line x1="100" y1="325" x2="400" y2="325" stroke="#FFFFFF" stroke-width="1" stroke-dasharray="5,5" />
+              
+              <!-- Elementos decorativos -->
+              <circle cx="250" cy="250" r="150" fill="none" stroke="#333" stroke-width="1" stroke-dasharray="5,5" />
+              <circle cx="250" cy="250" r="100" fill="none" stroke="#333" stroke-width="1" />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="right-column">
+        <h1 class="title">Ações para Amanhã</h1>
+        <div class="subtitle" id="current-date">Data: 02/10/2025</div>
+        
+        <div class="snapshot-controls">
+          <select id="snapshot-date" class="snapshot-date-selector">
+            <option value="current" selected>Data Atual</option>
+            <!-- Datas salvas serão adicionadas dinamicamente -->
+          </select>
+          <button id="btn-new-snapshot" class="btn btn-new">
+            <i class="fas fa-plus"></i> Nova Entrada
+          </button>
+          <button id="btn-save-snapshot" class="btn btn-save">
+            <i class="fas fa-save"></i> Salvar
+          </button>
+          <button id="btn-delete-snapshot" class="btn btn-delete" style="display: none;">
+            <i class="fas fa-trash"></i> Apagar
+          </button>
+        </div>
+        
+        <ul id="action-list" class="action-list">
+          <li class="action-item">
+            <div class="action-number">1</div>
+            <div class="action-content">
+              <input type="text" class="action-input" placeholder="Ação prioritária 1...">
+            </div>
+          </li>
+          <li class="action-item">
+            <div class="action-number">2</div>
+            <div class="action-content">
+              <input type="text" class="action-input" placeholder="Ação prioritária 2...">
+            </div>
+          </li>
+          <li class="action-item">
+            <div class="action-number">3</div>
+            <div class="action-content">
+              <input type="text" class="action-input" placeholder="Ação prioritária 3...">
+            </div>
+          </li>
+        </ul>
+        
+        <div class="action-controls">
+          <button id="btn-add-action" class="action-btn">
+            <i class="fas fa-plus"></i> Adicionar Ação
+          </button>
+          <button id="btn-remove-action" class="action-btn">
+            <i class="fas fa-minus"></i> Remover Ação
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div id="notification" class="notification">Dados salvos com sucesso!</div>
+    
+    <script>
+      // Formatação de data
+      function formatDate(date) {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+      }
+      
+      // Data atual
+      const today = new Date();
+      const currentDate = formatDate(today);
+      document.getElementById('current-date').textContent = `Data: ${currentDate}`;
+      
+      // Armazenamento de snapshots
+      const snapshots = {
+        current: {
+          date: currentDate,
+          actions: ['', '', '']
+        }
+      };
+      
+      // Snapshot selecionado atualmente
+      let currentSnapshotKey = 'current';
+      
+      // Função para mostrar notificação
+      function showNotification(message, isError = false) {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        
+        // Adicionar ou remover classe de erro
+        if (isError) {
+          notification.style.backgroundColor = 'rgba(255, 0, 0, 0.9)';
+        } else {
+          notification.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+        }
+        
+        notification.style.display = 'block';
+        
+        // Esconder a notificação após 3 segundos
+        setTimeout(() => {
+          notification.style.display = 'none';
+        }, 3000);
+      }
+      
+      // Função para atualizar a lista de ações com os dados do snapshot
+      function updateActionList() {
+        const snapshot = snapshots[currentSnapshotKey];
+        const actionList = document.getElementById('action-list');
+        const isEditable = currentSnapshotKey === 'current';
+        
+        // Limpar a lista atual
+        actionList.innerHTML = '';
+        
+        // Adicionar as ações do snapshot
+        snapshot.actions.forEach((action, index) => {
+          const actionItem = document.createElement('li');
+          actionItem.className = 'action-item';
+          
+          const actionNumber = document.createElement('div');
+          actionNumber.className = 'action-number';
+          actionNumber.textContent = index + 1;
+          
+          const actionContent = document.createElement('div');
+          actionContent.className = 'action-content';
+          
+          const actionInput = document.createElement('input');
+          actionInput.type = 'text';
+          actionInput.className = 'action-input';
+          actionInput.value = action;
+          actionInput.placeholder = `Ação prioritária ${index + 1}...`;
+          actionInput.disabled = !isEditable;
+          if (!isEditable) {
+            actionInput.style.opacity = '0.7';
+          }
+          
+          actionContent.appendChild(actionInput);
+          actionItem.appendChild(actionNumber);
+          actionItem.appendChild(actionContent);
+          actionList.appendChild(actionItem);
+        });
+        
+        // Mostrar/ocultar botões de adicionar/remover ação
+        document.getElementById('btn-add-action').style.display = isEditable ? 'flex' : 'none';
+        document.getElementById('btn-remove-action').style.display = isEditable ? 'flex' : 'none';
+        
+        // Mostrar/ocultar botão de apagar snapshot
+        document.getElementById('btn-delete-snapshot').style.display = currentSnapshotKey !== 'current' ? 'flex' : 'none';
+      }
+      
+      // Função para atualizar o seletor de snapshots
+      function updateSnapshotSelector() {
+        const selector = document.getElementById('snapshot-date');
+        const currentOption = selector.value;
+        
+        // Limpar opções existentes, exceto a atual
+        while (selector.options.length > 1) {
+          selector.remove(1);
+        }
+        
+        // Adicionar snapshots salvos
+        Object.keys(snapshots).forEach(key => {
+          if (key !== 'current') {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = snapshots[key].date;
+            selector.appendChild(option);
+          }
+        });
+        
+        // Restaurar a seleção anterior, se possível
+        if (Object.keys(snapshots).includes(currentOption)) {
+          selector.value = currentOption;
+        } else {
+          selector.value = 'current';
+          currentSnapshotKey = 'current';
+        }
+      }
+      
+      // Função para salvar o snapshot atual
+      function saveSnapshot() {
+        // Atualizar os dados do snapshot atual
+        const actionInputs = document.querySelectorAll('.action-input');
+        snapshots.current.actions = Array.from(actionInputs).map(input => input.value);
+        
+        // Criar uma cópia do snapshot atual com a data como chave
+        const dateKey = currentDate.replace(/\//g, '-');
+        snapshots[dateKey] = JSON.parse(JSON.stringify(snapshots.current));
+        
+        // Atualizar o seletor de snapshots
+        updateSnapshotSelector();
+        
+        // Mostrar notificação
+        showNotification('Snapshot salvo com sucesso!');
+      }
+      
+      // Função para criar um novo snapshot
+      function createNewSnapshot() {
+        // Limpar os dados do snapshot atual
+        snapshots.current = {
+          date: formatDate(new Date()),
+          actions: Array(document.querySelectorAll('.action-item').length).fill('')
+        };
+        
+        // Atualizar a interface
+        loadSnapshot('current');
+        
+        // Mostrar notificação
+        showNotification('Novo snapshot criado com sucesso!');
+      }
+      
+      // Função para apagar um snapshot
+      function deleteSnapshot() {
+        // Não permitir apagar o snapshot atual
+        if (currentSnapshotKey === 'current') {
+          showNotification('Não é possível apagar o snapshot atual!', true);
+          return;
+        }
+        
+        // Confirmar antes de apagar
+        if (confirm(`Tem certeza que deseja apagar o snapshot de ${snapshots[currentSnapshotKey].date}?`)) {
+          // Apagar o snapshot
+          delete snapshots[currentSnapshotKey];
+          
+          // Atualizar o seletor de snapshots
+          updateSnapshotSelector();
+          
+          // Carregar o snapshot atual
+          loadSnapshot('current');
+          
+          // Mostrar notificação
+          showNotification('Snapshot apagado com sucesso!');
+        }
+      }
+      
+      // Função para carregar um snapshot
+      function loadSnapshot(snapshotKey) {
+        if (snapshots[snapshotKey]) {
+          currentSnapshotKey = snapshotKey;
+          
+          // Atualizar a data exibida
+          document.getElementById('current-date').textContent = `Data: ${snapshots[snapshotKey].date}`;
+          
+          // Atualizar a lista de ações
+          updateActionList();
+        }
+      }
+      
+      // Função para adicionar uma nova ação
+      function addAction() {
+        // Adicionar uma nova ação vazia ao snapshot atual
+        snapshots.current.actions.push('');
+        
+        // Atualizar a lista de ações
+        updateActionList();
+      }
+      
+      // Função para remover a última ação
+      function removeAction() {
+        // Não permitir remover se houver apenas uma ação
+        if (snapshots.current.actions.length <= 1) {
+          showNotification('É necessário manter pelo menos uma ação!', true);
+          return;
+        }
+        
+        // Remover a última ação do snapshot atual
+        snapshots.current.actions.pop();
+        
+        // Atualizar a lista de ações
+        updateActionList();
+      }
+      
+      // Evento de mudança no seletor de snapshot
+      document.getElementById('snapshot-date').addEventListener('change', function() {
+        loadSnapshot(this.value);
+      });
+      
+      // Evento de clique no botão de salvar snapshot
+      document.getElementById('btn-save-snapshot').addEventListener('click', saveSnapshot);
+      
+      // Evento de clique no botão de novo snapshot
+      document.getElementById('btn-new-snapshot').addEventListener('click', function() {
+        if (confirm('Tem certeza que deseja criar um novo snapshot? Isso limpará todos os dados do snapshot atual.')) {
+          createNewSnapshot();
+        }
+      });
+      
+      // Evento de clique no botão de apagar snapshot
+      document.getElementById('btn-delete-snapshot').addEventListener('click', deleteSnapshot);
+      
+      // Evento de clique no botão de adicionar ação
+      document.getElementById('btn-add-action').addEventListener('click', addAction);
+      
+      // Evento de clique no botão de remover ação
+      document.getElementById('btn-remove-action').addEventListener('click', removeAction);
+      
+      // Inicializar a interface
+      updateActionList();
+    </script>
+<script src="js/navigation.js"></script>
+  </body>
+</html>

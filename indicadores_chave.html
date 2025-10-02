@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=SF+Pro:wght@300;400;600&display=swap');
+      
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'SF Pro', sans-serif;
+      }
+      
+      .slide-container {
+        width: 1280px;
+        min-height: 720px;
+        background: #000000;
+        color: #FFFFFF;
+        display: flex;
+        position: relative;
+      }
+      
+      .left-column {
+        width: 50%;
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      
+      .right-column {
+        width: 50%;
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      
+      .title {
+        font-family: 'Inter', sans-serif;
+        font-size: 48px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        line-height: 1.2;
+      }
+      
+      .chart-container {
+        width: 100%;
+        margin-bottom: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        padding: 15px;
+      }
+      
+      .chart-title {
+        font-family: 'Inter', sans-serif;
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #CCCCCC;
+      }
+      
+      .mini-cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+      
+      .mini-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        padding: 10px;
+        display: flex;
+        align-items: center;
+      }
+      
+      .mini-card-icon {
+        font-size: 20px;
+        margin-right: 10px;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+      }
+      
+      .mini-card-content {
+        flex: 1;
+      }
+      
+      .mini-card-value {
+        font-size: 18px;
+        font-weight: bold;
+        line-height: 1.2;
+      }
+      
+      .mini-card-label {
+        font-size: 11px;
+        opacity: 0.8;
+      }
+      
+      .snapshot-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 15px;
+      }
+      
+      .snapshot-date-selector {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        color: white;
+        padding: 4px 8px;
+        font-size: 13px;
+      }
+      
+      .snapshot-date-selector:focus {
+        outline: none;
+        border-color: #CCCCCC;
+      }
+      
+      .snapshot-date-selector option {
+        background: #000000;
+        color: white;
+      }
+      
+      .btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: bold;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+      }
+      
+      .btn i {
+        margin-right: 5px;
+      }
+      
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      
+      .btn:active {
+        transform: translateY(1px);
+      }
+      
+      .btn-save {
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+      
+      .btn-save:hover {
+        background: rgba(255, 255, 255, 0.25);
+      }
+      
+      .btn-new {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      
+      .btn-new:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      
+      .btn-delete {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      
+      .btn-delete:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      
+      .day-selector {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      
+      .day-selector label {
+        margin-right: 10px;
+        font-weight: bold;
+        font-size: 13px;
+      }
+      
+      .day-selector select {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        color: white;
+        padding: 4px 8px;
+        font-size: 13px;
+      }
+      
+      .day-selector select:focus {
+        outline: none;
+        border-color: #CCCCCC;
+      }
+      
+      .day-selector option {
+        background: #000000;
+        color: white;
+      }
+      
+      .metrics-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-bottom: 15px;
+      }
+      
+      .metrics-table th {
+        text-align: left;
+        font-size: 14px;
+        font-weight: bold;
+        color: #CCCCCC;
+        padding: 8px 0;
+      }
+      
+      .metrics-table td {
+        padding: 6px 0;
+        font-size: 14px;
+      }
+      
+      .metrics-table tr:not(:last-child) td {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      .kpi-icon {
+        display: inline-flex;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        justify-content: center;
+        align-items: center;
+        margin-right: 8px;
+        background: rgba(255, 255, 255, 0.1);
+      }
+      
+      .kpi-input {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        color: white;
+        padding: 4px 8px;
+        width: 100px;
+        text-align: right;
+        font-weight: bold;
+      }
+      
+      .kpi-input:focus {
+        outline: none;
+        border-color: #CCCCCC;
+      }
+      
+      .progress-container {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        height: 6px;
+        margin-top: 8px;
+        overflow: hidden;
+      }
+      
+      .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #CCCCCC, #FFFFFF);
+        border-radius: 10px;
+        width: 0%;
+        transition: width 1s ease;
+      }
+      
+      .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #000000;
+        padding: 10px 20px;
+        border-radius: 4px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        display: none;
+        z-index: 1000;
+        animation: fadeIn 0.3s, fadeOut 0.3s 2.7s;
+      }
+      
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      
+      @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="slide-container">
+      <div class="left-column">
+        <div>
+          <h1 class="title">Indicadores-Chave</h1>
+          
+          <div class="snapshot-controls">
+            <select id="snapshot-week" class="snapshot-date-selector">
+              <option value="current" selected>Semana Atual</option>
+              <!-- Semanas salvas serão adicionadas dinamicamente -->
+            </select>
+            <button id="btn-new-snapshot" class="btn btn-new">
+              <i class="fas fa-plus"></i> Nova
+            </button>
+            <button id="btn-save-snapshot" class="btn btn-save">
+              <i class="fas fa-save"></i> Salvar
+            </button>
+            <button id="btn-delete-snapshot" class="btn btn-delete" style="display: none;">
+              <i class="fas fa-trash"></i> Apagar
+            </button>
+          </div>
+          
+          <div class="mini-cards">
+            <div class="mini-card">
+              <div class="mini-card-icon">
+                <i class="fas fa-dollar-sign" style="color: #CCCCCC;"></i>
+              </div>
+              <div class="mini-card-content">
+                <div class="mini-card-value" id="vendas-dia-card">R$ 0</div>
+                <div class="mini-card-label">Vendas do Dia</div>
+              </div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-card-icon">
+                <i class="fas fa-shopping-cart" style="color: #CCCCCC;"></i>
+              </div>
+              <div class="mini-card-content">
+                <div class="mini-card-value" id="pedidos-card">0</div>
+                <div class="mini-card-label">Pedidos Fechados</div>
+              </div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-card-icon">
+                <i class="fas fa-ticket-alt" style="color: #CCCCCC;"></i>
+              </div>
+              <div class="mini-card-content">
+                <div class="mini-card-value" id="ticket-card">R$ 0</div>
+                <div class="mini-card-label">Ticket Médio</div>
+              </div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-card-icon">
+                <i class="fas fa-users" style="color: #CCCCCC;"></i>
+              </div>
+              <div class="mini-card-content">
+                <div class="mini-card-value" id="clientes-card">0</div>
+                <div class="mini-card-label">Novos Clientes</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <div class="day-selector">
+            <label for="selected-day">Dia:</label>
+            <select id="selected-day">
+              <option value="0">Segunda</option>
+              <option value="1">Terça</option>
+              <option value="2">Quarta</option>
+              <option value="3">Quinta</option>
+              <option value="4" selected>Sexta</option>
+            </select>
+            <button id="btn-save-day" class="btn btn-save" style="margin-left: 10px;">Salvar</button>
+          </div>
+          
+          <table class="metrics-table">
+            <thead>
+              <tr>
+                <th>Indicador</th>
+                <th style="text-align: right;">Resultado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div style="display: flex; align-items: center;">
+                    <span class="kpi-icon"><i class="fas fa-dollar-sign"></i></span>
+                    Vendas do dia (R$)
+                  </div>
+                </td>
+                <td style="text-align: right;">
+                  <input type="text" id="vendas-dia" class="kpi-input" placeholder="0" value="">
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="display: flex; align-items: center;">
+                    <span class="kpi-icon"><i class="fas fa-shopping-cart"></i></span>
+                    Pedidos fechados (Qtd)
+                  </div>
+                </td>
+                <td style="text-align: right;">
+                  <input type="text" id="pedidos-fechados" class="kpi-input" placeholder="0" value="">
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="display: flex; align-items: center;">
+                    <span class="kpi-icon"><i class="fas fa-ticket-alt"></i></span>
+                    Ticket médio (R$)
+                  </div>
+                </td>
+                <td style="text-align: right;">
+                  <input type="text" id="ticket-medio" class="kpi-input" placeholder="0" value="">
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="display: flex; align-items: center;">
+                    <span class="kpi-icon"><i class="fas fa-users"></i></span>
+                    Novos clientes
+                  </div>
+                </td>
+                <td style="text-align: right;">
+                  <input type="text" id="novos-clientes" class="kpi-input" placeholder="0" value="">
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="display: flex; align-items: center;">
+                    <span class="kpi-icon"><i class="fas fa-calendar-check"></i></span>
+                    Acumulado Mês (R$)
+                  </div>
+                </td>
+                <td style="text-align: right;">
+                  <input type="text" id="acumulado-mes" class="kpi-input" placeholder="0" value="">
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span style="font-size: 13px;">Meta mensal:</span>
+              <span id="meta-percentual" style="font-size: 13px;">0%</span>
+            </div>
+            <div class="progress-container">
+              <div class="progress-bar" id="meta-progress"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="right-column">
+        <div class="chart-container" style="flex: 1.5;">
+          <div class="chart-title">Evolução de Vendas na Semana</div>
+          <div style="height: 280px;">
+            <canvas id="kpiChart"></canvas>
+          </div>
+        </div>
+        
+        <div class="chart-container" style="flex: 1;">
+          <div class="chart-title">Distribuição de Vendas por Categoria</div>
+          <div style="height: 230px; display: flex; justify-content: center;">
+            <canvas id="pieChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="notification" class="notification">Dados salvos com sucesso!</div>
+    
+    <script>
+      // Formatação de data
+      function formatDate(date) {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+      }
+      
+      // Formatação de semana
+      function formatWeek(date) {
+        const startOfWeek = new Date(date);
+        const dayOfWeek = startOfWeek.getDay();
+        const diff = startOfWeek.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Ajuste para começar na segunda-feira
+        startOfWeek.setDate(diff);
+        
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(endOfWeek.getDate() + 4); // 5 dias úteis (segunda a sexta)
+        
+        return `${formatDate(startOfWeek)} - ${formatDate(endOfWeek)}`;
+      }
+      
+      // Dados iniciais para os gráficos
+      const weekDays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
+      
+      // Armazenamento de snapshots semanais
+      const weeklySnapshots = {
+        current: {
+          weekLabel: formatWeek(new Date()),
+          date: formatDate(new Date()),
+          dailyData: {
+            sales: [0, 0, 0, 0, 0],
+            orders: [0, 0, 0, 0, 0],
+            tickets: [0, 0, 0, 0, 0],
+            clients: [0, 0, 0, 0, 0]
+          },
+          acumuladoMes: 0,
+          pieData: [25, 25, 25, 25] // Valores padrão para o gráfico de pizza
+        }
+      };
+      
+      // Meta diária (será ajustada dinamicamente)
+      const targetData = [0, 0, 0, 0, 0];
+      
+      // Dia selecionado atualmente (padrão: Sexta - índice 4)
+      let selectedDayIndex = 4;
+      
+      // Snapshot selecionado atualmente
+      let currentSnapshotKey = 'current';
+      
+      // Configuração do gráfico de barras
+      const ctx = document.getElementById('kpiChart').getContext('2d');
+      const kpiChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: weekDays,
+          datasets: [
+            {
+              label: 'Vendas Diárias (R$)',
+              data: weeklySnapshots.current.dailyData.sales,
+              backgroundColor: 'rgba(204, 204, 204, 0.7)',
+              borderColor: 'rgba(255, 255, 255, 1)',
+              borderWidth: 1,
+              borderRadius: 5,
+              barPercentage: 0.6,
+            },
+            {
+              label: 'Meta Diária (R$)',
+              data: targetData,
+              type: 'line',
+              backgroundColor: 'rgba(255, 255, 255, 0)',
+              borderColor: 'rgba(255, 255, 255, 0.8)',
+              borderWidth: 2,
+              pointBackgroundColor: 'rgba(255, 255, 255, 1)',
+              pointRadius: 4,
+              tension: 0.2,
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleFont: {
+                size: 14
+              },
+              bodyFont: {
+                size: 14
+              },
+              padding: 15,
+              cornerRadius: 5,
+              displayColors: true,
+              callbacks: {
+                label: function(context) {
+                  let label = context.dataset.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  if (context.parsed.y !== null) {
+                    label += 'R$ ' + context.parsed.y.toLocaleString('pt-BR');
+                  }
+                  return label;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              },
+              ticks: {
+                color: 'white',
+                font: {
+                  size: 12
+                },
+                callback: function(value) {
+                  return 'R$ ' + value.toLocaleString('pt-BR');
+                }
+              },
+              // Ajuste dinâmico da escala
+              suggestedMax: 10000
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: 'white',
+                font: {
+                  size: 12
+                }
+              }
+            }
+          }
+        }
+      });
+      
+      // Configuração do gráfico de pizza
+      const pieCtx = document.getElementById('pieChart').getContext('2d');
+      const pieChart = new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Produto A', 'Produto B', 'Produto C', 'Outros'],
+          datasets: [{
+            data: weeklySnapshots.current.pieData,
+            backgroundColor: [
+              'rgba(204, 204, 204, 0.7)',
+              'rgba(255, 255, 255, 0.7)',
+              'rgba(170, 170, 170, 0.7)',
+              'rgba(120, 120, 120, 0.7)'
+            ],
+            borderColor: [
+              'rgba(204, 204, 204, 1)',
+              'rgba(255, 255, 255, 1)',
+              'rgba(170, 170, 170, 1)',
+              'rgba(120, 120, 120, 1)'
+            ],
+            borderWidth: 1,
+            hoverOffset: 10
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: {
+                color: 'white',
+                padding: 10,
+                font: {
+                  size: 11
+                },
+                boxWidth: 12
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleFont: {
+                size: 14
+              },
+              bodyFont: {
+                size: 14
+              },
+              padding: 15,
+              cornerRadius: 5
+            }
+          },
+          cutout: '60%'
+        }
+      });
+      
+      // Função para formatar valores monetários
+      function formatCurrency(value) {
+        if (!value) return 'R$ 0';
+        return 'R$ ' + parseFloat(value.toString().replace(/[^\d,.-]/g, '').replace(',', '.')).toLocaleString('pt-BR');
+      }
+      
+      // Função para atualizar os mini-cards com os dados do dia selecionado
+      function updateMiniCards() {
+        const snapshot = weeklySnapshots[currentSnapshotKey];
+        document.getElementById('vendas-dia-card').textContent = formatCurrency(snapshot.dailyData.sales[selectedDayIndex]);
+        document.getElementById('pedidos-card').textContent = snapshot.dailyData.orders[selectedDayIndex];
+        document.getElementById('ticket-card').textContent = formatCurrency(snapshot.dailyData.tickets[selectedDayIndex]);
+        document.getElementById('clientes-card').textContent = snapshot.dailyData.clients[selectedDayIndex];
+      }
+      
+      // Função para atualizar a barra de progresso
+      function updateProgressBar() {
+        const snapshot = weeklySnapshots[currentSnapshotKey];
+        const acumuladoMes = snapshot.acumuladoMes || 0;
+        const metaMensal = 3000000; // Meta mensal fixa para exemplo (R$ 3.000.000)
+        const percentual = Math.min(100, Math.round((acumuladoMes / metaMensal) * 100));
+        
+        document.getElementById('meta-percentual').textContent = percentual + '%';
+        document.getElementById('meta-progress').style.width = percentual + '%';
+      }
+      
+      // Função para atualizar os campos de entrada com os dados do dia selecionado
+      function updateInputFields() {
+        const snapshot = weeklySnapshots[currentSnapshotKey];
+        const isEditable = currentSnapshotKey === 'current';
+        
+        document.getElementById('vendas-dia').value = snapshot.dailyData.sales[selectedDayIndex] ? snapshot.dailyData.sales[selectedDayIndex].toLocaleString('pt-BR') : '';
+        document.getElementById('pedidos-fechados').value = snapshot.dailyData.orders[selectedDayIndex] || '';
+        document.getElementById('ticket-medio').value = snapshot.dailyData.tickets[selectedDayIndex] ? snapshot.dailyData.tickets[selectedDayIndex].toLocaleString('pt-BR') : '';
+        document.getElementById('novos-clientes').value = snapshot.dailyData.clients[selectedDayIndex] || '';
+        document.getElementById('acumulado-mes').value = snapshot.acumuladoMes ? snapshot.acumuladoMes.toLocaleString('pt-BR') : '';
+        
+        // Desabilitar campos se não for o snapshot atual
+        const inputs = document.querySelectorAll('.kpi-input');
+        inputs.forEach(input => {
+          input.disabled = !isEditable;
+          if (!isEditable) {
+            input.style.opacity = '0.7';
+          } else {
+            input.style.opacity = '1';
+          }
+        });
+        
+        // Mostrar/ocultar botão de salvar dia
+        document.getElementById('btn-save-day').style.display = isEditable ? 'inline-flex' : 'none';
+        
+        // Mostrar/ocultar botão de apagar snapshot
+        document.getElementById('btn-delete-snapshot').style.display = currentSnapshotKey !== 'current' ? 'flex' : 'none';
+      }
+      
+      // Função para destacar o dia selecionado no gráfico
+      function highlightSelectedDay() {
+        // Remover destaque anterior
+        kpiChart.data.datasets[0].backgroundColor = Array(5).fill('rgba(204, 204, 204, 0.7)');
+        
+        // Adicionar destaque ao dia selecionado
+        kpiChart.data.datasets[0].backgroundColor[selectedDayIndex] = 'rgba(255, 255, 255, 0.7)';
+        
+        // Atualizar o gráfico
+        kpiChart.update();
+      }
+      
+      // Função para ajustar a escala do eixo Y com base nos dados
+      function adjustYAxisScale() {
+        const snapshot = weeklySnapshots[currentSnapshotKey];
+        
+        // Encontrar o valor máximo nas vendas
+        const maxSales = Math.max(...snapshot.dailyData.sales);
+        
+        // Definir um valor máximo sugerido para o eixo Y
+        // Adicionar 20% para dar espaço acima da barra mais alta
+        const suggestedMax = maxSales * 1.2;
+        
+        // Atualizar a escala do eixo Y
+        kpiChart.options.scales.y.suggestedMax = suggestedMax;
+        
+        // Atualizar a meta diária para ser 80% do valor máximo
+        const targetValue = maxSales * 0.8;
+        targetData.fill(targetValue);
+        kpiChart.data.datasets[1].data = targetData;
+        
+        // Atualizar o gráfico
+        kpiChart.update();
+      }
+      
+      // Função para mostrar notificação
+      function showNotification(message, isError = false) {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        
+        // Adicionar ou remover classe de erro
+        if (isError) {
+          notification.style.backgroundColor = 'rgba(255, 0, 0, 0.9)';
+        } else {
+          notification.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+        }
+        
+        notification.style.display = 'block';
+        
+        // Esconder a notificação após 3 segundos
+        setTimeout(() => {
+          notification.style.display = 'none';
+        }, 3000);
+      }
+      
+      // Função para salvar os dados do dia selecionado
+      function saveDayData() {
+        const snapshot = weeklySnapshots.current;
+        
+        const vendasDia = parseFloat(document.getElementById('vendas-dia').value.replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
+        const pedidosFechados = parseInt(document.getElementById('pedidos-fechados').value) || 0;
+        const ticketMedio = parseFloat(document.getElementById('ticket-medio').value.replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
+        const novosClientes = parseInt(document.getElementById('novos-clientes').value) || 0;
+        const acumuladoMes = parseFloat(document.getElementById('acumulado-mes').value.replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
+        
+        // Salvar os dados no objeto snapshot
+        snapshot.dailyData.sales[selectedDayIndex] = vendasDia;
+        snapshot.dailyData.orders[selectedDayIndex] = pedidosFechados;
+        snapshot.dailyData.tickets[selectedDayIndex] = ticketMedio;
+        snapshot.dailyData.clients[selectedDayIndex] = novosClientes;
+        snapshot.acumuladoMes = acumuladoMes;
+        
+        // Atualizar o gráfico
+        kpiChart.data.datasets[0].data = snapshot.dailyData.sales;
+        
+        // Ajustar a escala do eixo Y
+        adjustYAxisScale();
+        
+        // Atualizar os mini-cards
+        updateMiniCards();
+        
+        // Atualizar a barra de progresso
+        updateProgressBar();
+        
+        // Mostrar notificação
+        showNotification('Dados salvos com sucesso para ' + weekDays[selectedDayIndex] + '!');
+      }
+      
+      // Função para criar um novo snapshot semanal
+      function createNewSnapshot() {
+        // Limpar os dados da semana atual
+        weeklySnapshots.current = {
+          weekLabel: formatWeek(new Date()),
+          date: formatDate(new Date()),
+          dailyData: {
+            sales: [0, 0, 0, 0, 0],
+            orders: [0, 0, 0, 0, 0],
+            tickets: [0, 0, 0, 0, 0],
+            clients: [0, 0, 0, 0, 0]
+          },
+          acumuladoMes: 0,
+          pieData: [25, 25, 25, 25] // Valores padrão para o gráfico de pizza
+        };
+        
+        // Atualizar a interface
+        loadSnapshot('current');
+        
+        // Mostrar notificação
+        showNotification('Nova semana criada com sucesso!');
+      }
+      
+      // Função para salvar o snapshot semanal atual
+      function saveWeeklySnapshot() {
+        const currentDate = new Date();
+        const weekKey = formatWeek(currentDate).replace(/\//g, '-');
+        
+        // Salvar o snapshot atual com a semana como chave
+        weeklySnapshots[weekKey] = JSON.parse(JSON.stringify(weeklySnapshots.current));
+        weeklySnapshots[weekKey].date = formatDate(currentDate);
+        
+        // Atualizar o seletor de semanas
+        updateWeekSelector();
+        
+        // Mostrar notificação
+        showNotification('Snapshot da semana salvo com sucesso!');
+      }
+      
+      // Função para apagar um snapshot semanal
+      function deleteSnapshot() {
+        // Não permitir apagar o snapshot atual
+        if (currentSnapshotKey === 'current') {
+          showNotification('Não é possível apagar a semana atual!', true);
+          return;
+        }
+        
+        // Confirmar antes de apagar
+        if (confirm(`Tem certeza que deseja apagar o snapshot da semana ${weeklySnapshots[currentSnapshotKey].weekLabel}?`)) {
+          // Apagar o snapshot
+          delete weeklySnapshots[currentSnapshotKey];
+          
+          // Atualizar o seletor de semanas
+          updateWeekSelector();
+          
+          // Carregar o snapshot atual
+          loadSnapshot('current');
+          
+          // Mostrar notificação
+          showNotification('Snapshot apagado com sucesso!');
+        }
+      }
+      
+      // Função para atualizar o seletor de snapshots semanais
+      function updateWeekSelector() {
+        const selector = document.getElementById('snapshot-week');
+        const currentOption = selector.value;
+        
+        // Limpar opções existentes, exceto a atual
+        while (selector.options.length > 1) {
+          selector.remove(1);
+        }
+        
+        // Adicionar snapshots salvos
+        Object.keys(weeklySnapshots).forEach(key => {
+          if (key !== 'current') {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = weeklySnapshots[key].weekLabel;
+            selector.appendChild(option);
+          }
+        });
+        
+        // Restaurar a seleção anterior, se possível
+        if (Object.keys(weeklySnapshots).includes(currentOption)) {
+          selector.value = currentOption;
+        } else {
+          selector.value = 'current';
+          currentSnapshotKey = 'current';
+        }
+      }
+      
+      // Função para carregar um snapshot semanal
+      function loadSnapshot(snapshotKey) {
+        if (weeklySnapshots[snapshotKey]) {
+          currentSnapshotKey = snapshotKey;
+          const snapshot = weeklySnapshots[snapshotKey];
+          
+          // Atualizar os dados do gráfico de barras
+          kpiChart.data.datasets[0].data = snapshot.dailyData.sales;
+          
+          // Atualizar os dados do gráfico de pizza
+          pieChart.data.datasets[0].data = snapshot.pieData;
+          pieChart.update();
+          
+          // Ajustar a escala do eixo Y
+          adjustYAxisScale();
+          
+          // Atualizar os campos de entrada
+          updateInputFields();
+          
+          // Atualizar os mini-cards
+          updateMiniCards();
+          
+          // Atualizar a barra de progresso
+          updateProgressBar();
+          
+          // Destacar o dia selecionado
+          highlightSelectedDay();
+          
+          // Mostrar/ocultar botão de apagar snapshot
+          document.getElementById('btn-delete-snapshot').style.display = snapshotKey !== 'current' ? 'flex' : 'none';
+        }
+      }
+      
+      // Evento de mudança do dia selecionado
+      document.getElementById('selected-day').addEventListener('change', function() {
+        selectedDayIndex = parseInt(this.value);
+        updateInputFields();
+        updateMiniCards();
+        highlightSelectedDay();
+      });
+      
+      // Evento de clique no botão de salvar dia
+      document.getElementById('btn-save-day').addEventListener('click', saveDayData);
+      
+      // Evento de clique no botão de nova semana
+      document.getElementById('btn-new-snapshot').addEventListener('click', function() {
+        if (confirm('Tem certeza que deseja criar uma nova semana? Isso limpará todos os dados da semana atual.')) {
+          createNewSnapshot();
+        }
+      });
+      
+      // Evento de clique no botão de salvar snapshot semanal
+      document.getElementById('btn-save-snapshot').addEventListener('click', saveWeeklySnapshot);
+      
+      // Evento de clique no botão de apagar snapshot
+      document.getElementById('btn-delete-snapshot').addEventListener('click', deleteSnapshot);
+      
+      // Evento de mudança no seletor de snapshot semanal
+      document.getElementById('snapshot-week').addEventListener('change', function() {
+        loadSnapshot(this.value);
+      });
+      
+      // Inicializar a interface
+      updateInputFields();
+      updateMiniCards();
+      highlightSelectedDay();
+      updateProgressBar();
+    </script>
+<script src="js/navigation.js"></script>
+  </body>
+</html>
